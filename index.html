@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OYNA прототипі</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Dark gaming: түнгі көк фон, электр күлгін — басты әрекет, неон көгілдір — таңдалған күй */
+  --bg:#05070F; --surface:#0C1022; --surface2:#131936; --line:#222A52;
+  --violet:#8B5CF6; --violet-ink:#C4B5FD; --cyan:#22D3EE;
+  --text:#F4F6FF; --muted:#8B93BD;
+  --ok:#34D399; --warn:#FBBF24; --bad:#FB7185;
+  --display:"Unbounded", "Arial Black", system-ui, sans-serif;
+  --body:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:14px;
+  color-scheme: dark;
+  /* layout: бір баған, телефон ені (≤ 440px), төменгі әрекет жолағы жабысып тұрады */
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.45}
+body{display:flex;justify-content:center}
+.app{width:100%;max-width:440px;min-height:100vh;padding:0 16px 120px;position:relative}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:26px;line-height:1.1}
+h2{font-size:19px;line-height:1.2}
+h3{font-size:15px}
+p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.logo{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.04em}
+.logo b{color:var(--cyan)}
+.seg{margin-left:auto;display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--violet);color:#fff}
+.proto{font-size:12px;color:var(--warn);border:1px dashed #6b5a1c;border-radius:10px;padding:8px 10px;margin-bottom:16px;background:#1a160866}
+
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:8px;align-items:center}
+.wrap{flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan);background:#0a2a33}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.btn{border:0;border-radius:12px;padding:14px 16px;font-weight:700;background:var(--violet);color:#fff;width:100%;font-size:15px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.cyan{background:var(--cyan);color:#04121a}
+.link{background:none;border:0;color:var(--violet-ink);padding:0;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:440px;padding:12px 16px 16px;background:linear-gradient(to top,var(--bg) 70%,transparent);z-index:6}
+.bar .sum{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-size:13px}
+.bar .sum b{font-size:18px;font-family:var(--display)}
+
+/* club list */
+.club{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:stretch;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:10px;width:100%}
+.cover{border-radius:10px;min-height:96px;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.cover .tag{position:absolute;left:6px;bottom:6px;font-size:10px;font-weight:700;letter-spacing:.06em;background:#000a;padding:3px 6px;border-radius:6px}
+.club h3{font-family:var(--body);font-size:16px;font-weight:700}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+.badge.kaspi{color:#fda4af;border-color:#5b2133}
+.badge.venue{color:var(--ok);border-color:#1d4d3c}
+.badge.new{color:var(--cyan);border-color:#155e6e}
+
+/* club page */
+.hero{border-radius:18px;min-height:190px;padding:16px;display:flex;flex-direction:column;justify-content:flex-end;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#05070Fee,#05070F11 70%)}
+.hero>*{position:relative;z-index:1}
+.contacts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.contacts a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--text);text-decoration:none;font-size:12px;font-weight:600}
+.contacts a[aria-disabled="true"]{opacity:.35;pointer-events:none}
+.contacts svg{width:20px;height:20px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 0;font-weight:600;font-size:13px}
+.slot[aria-pressed="true"]{background:var(--cyan);color:#04121a;border-color:var(--cyan)}
+.slot:disabled{opacity:.25;text-decoration:line-through;cursor:not-allowed}
+.label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* seat maps */
+.map{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.screen{height:6px;border-radius:6px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);margin:0 20% 6px;box-shadow:0 0 18px var(--cyan)}
+.screen-t{text-align:center;font-size:10px;letter-spacing:.2em;color:var(--muted);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.seat{aspect-ratio:1;border-radius:10px;border:1.5px solid #2c3566;background:#10163a;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;position:relative}
+.rooms{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.room{border-radius:12px;border:1.5px solid #2c3566;background:#10163a;padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:92px}
+.room b{font-family:var(--display);font-size:14px}
+.fields{display:grid;gap:10px}
+.field{border-radius:12px;border:1.5px solid #2c3566;background:#0d2a1f;padding:12px;text-align:left;min-height:110px;position:relative;overflow:hidden}
+.field::before{content:"";position:absolute;inset:12px;border:1.5px solid #ffffff2a;border-radius:6px}
+.field::after{content:"";position:absolute;top:12px;bottom:12px;left:50%;border-left:1.5px solid #ffffff2a}
+.field span{position:relative;z-index:1}
+.lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lane{border-radius:10px;border:1.5px solid #2c3566;background:#10163a;min-height:150px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;font-weight:700}
+.st-av:hover{border-color:var(--violet)}
+.st-sel{background:var(--cyan)!important;border-color:var(--cyan)!important;color:#04121a!important;box-shadow:0 0 16px #22d3ee88}
+.st-occ{background:#1a1d2e!important;border-color:#1a1d2e!important;color:#4a5072!important;cursor:not-allowed}
+.st-held{border-style:dashed!important;border-color:var(--warn)!important;color:var(--warn)!important;cursor:not-allowed}
+.st-off{opacity:.3;cursor:not-allowed;background:repeating-linear-gradient(45deg,#10163a,#10163a 5px,#1a1f40 5px,#1a1f40 10px)!important}
+.legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-2px;border:1.5px solid #2c3566;background:#10163a}
+
+/* forms */
+.f{display:flex;flex-direction:column;gap:6px}
+.f label{font-size:13px;font-weight:600}
+.f input,.f textarea,.f select{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;width:100%}
+.f input:focus,.f textarea:focus{border-color:var(--violet);outline:none}
+.f .err{color:var(--bad);font-size:12px}
+.f.bad input{border-color:var(--bad)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.niche{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.niche button{text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.niche button[aria-pressed="true"]{border-color:var(--violet);background:#1b1440}
+.niche svg{width:30px;height:30px;color:var(--cyan)}
+.niche b{font-size:15px}
+.steps{display:flex;gap:4px;margin-bottom:6px}
+.steps i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.steps i.on{background:var(--violet)}
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface2)}
+.stepper button{border:0;background:none;width:44px;height:44px;font-size:20px;font-weight:700}
+.stepper output{flex:1;text-align:center;font-family:var(--display);font-size:18px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.switch input{width:44px;height:26px;accent-color:var(--violet)}
+.photos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.photos .ph{aspect-ratio:1;border-radius:10px;background-size:cover;background-position:center;border:1px solid var(--line);position:relative}
+.photos .ph em{position:absolute;left:4px;top:4px;font-style:normal;font-size:9px;font-weight:700;background:var(--violet);padding:2px 5px;border-radius:5px}
+.photos label{aspect-ratio:1;border-radius:10px;border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);cursor:pointer}
+.zone{border:1px solid var(--line);border-radius:var(--r);padding:14px;background:var(--surface);display:flex;flex-direction:column;gap:12px}
+.zone.vip{border-color:#4c2f9b;background:linear-gradient(180deg,#1a1240,var(--surface) 60%)}
+.radio{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);width:100%}
+.radio[aria-pressed="true"]{border-color:var(--violet);background:#1b1440}
+.radio .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);flex:none;margin-top:2px}
+.radio[aria-pressed="true"] .dot{border-color:var(--violet);background:radial-gradient(var(--violet) 45%,transparent 50%)}
+dl.sum{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;margin:0;font-size:14px}
+dl.sum dt{color:var(--muted)}
+dl.sum dd{margin:0;text-align:right;font-weight:600}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed var(--line);padding-top:10px;margin-top:4px}
+.total b{font-family:var(--display);font-size:20px}
+.rules{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:12px;border-radius:12px;border:1px solid #5b2133;background:#2a0f1a}
+.rules input{width:20px;height:20px;accent-color:var(--violet);flex:none;margin-top:1px}
+.kaspi{border-radius:var(--r);padding:16px;background:linear-gradient(135deg,#3a0d17,#1c0b12);border:1px solid #5b2133;display:flex;flex-direction:column;gap:10px}
+.kaspi .amt{font-family:var(--display);font-size:28px}
+.timer{font-family:var(--display);color:var(--warn);font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px}
+.pill.wait{background:#3a2e0a;color:var(--warn)}
+.pill.ok{background:#0e3326;color:var(--ok)}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.code{font-family:var(--display);font-size:30px;letter-spacing:.06em;color:var(--cyan)}
+.preview-note{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+@media (prefers-reduced-motion:no-preference){.seat,.room,.field,.lane,.slot,.chip{transition:background .15s,border-color .15s,box-shadow .15s}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+/* ===================== Деректер ===================== */
+const NICHES = {
+  pc_club:{label:'Компьютер клубы', short:'PC', unit:'компьютер', countLabel:'Компьютер саны', prefix:'PC', pad:true, layout:'grid',
+    std:{name:'Standard', count:20, price:800}, vip:{name:'VIP', count:5, price:1500},
+    extras:[{k:'gpu',l:'Видеокарта',ph:'RTX 4060'},{k:'hz',l:'Монитор, Гц',ph:'240'}],
+    icon:'<path d="M4 5h16v10H4zM9 19h6M12 15v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'},
+  playstation:{label:'PlayStation клубы', short:'PS', unit:'бөлме', countLabel:'Бөлме саны', prefix:'PS', layout:'rooms',
+    std:{name:'Standard бөлмелер', count:4, price:1500}, vip:{name:'VIP бөлмелер', count:2, price:3000},
+    extras:[{k:'console',l:'Консоль',ph:'PS5'},{k:'tv',l:'Теледидар',ph:'65"'},{k:'cap',l:'Неше адам сияды',ph:'4'}],
+    icon:'<path d="M7 9h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.8A3 3 0 0 1 3 14v-1a4 4 0 0 1 4-4z M8 11v3M6.5 12.5h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'},
+  football:{label:'Футбол алаңы', short:'Футбол', unit:'алаң', countLabel:'Алаң саны', prefix:'АЛАҢ', layout:'fields',
+    std:{name:'Алаңдар', count:2, price:12000}, vip:{name:'VIP алаң', count:1, price:18000},
+    extras:[{k:'size',l:'Өлшемі',ph:'5×5'},{k:'type',l:'Түрі',ph:'Жабық, жасанды шөп'},{k:'cap',l:'Ойыншы саны',ph:'10–14'}],
+    icon:'<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5l3.5 2.5-1.3 4h-4.4l-1.3-4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'},
+  bowling:{label:'Боулинг', short:'Боулинг', unit:'жолақ', countLabel:'Жолақ саны', prefix:'ЖОЛАҚ', layout:'lanes',
+    std:{name:'Жолақтар', count:6, price:6000}, vip:{name:'VIP жолақ', count:2, price:9000},
+    extras:[{k:'cap',l:'Бір жолаққа адам',ph:'6'}],
+    icon:'<circle cx="10" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="12" r=".9" fill="currentColor"/><circle cx="11" cy="11.3" r=".9" fill="currentColor"/><path d="M17 4c1.5 0 2 1.2 2 2.5S18 9 18 10s1.5 2.5 1.5 5S18.5 20 17 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'}
+};
+const COVERS = {
+  pc_club:'radial-gradient(circle at 20% 30%,#8B5CF6aa,transparent 45%),radial-gradient(circle at 80% 70%,#22D3EE88,transparent 40%),repeating-linear-gradient(90deg,#0b0f25 0 18px,#11173a 18px 20px),#0b0f25',
+  playstation:'radial-gradient(circle at 75% 25%,#22D3EEaa,transparent 40%),radial-gradient(circle at 25% 80%,#8B5CF6aa,transparent 45%),#0a0d22',
+  football:'radial-gradient(circle at 50% 50%,#ffffff22 0 14%,transparent 14.5%),linear-gradient(90deg,#0f3d2a 0 50%,#124a33 50%),#0f3d2a',
+  bowling:'repeating-linear-gradient(90deg,#3b2a14 0 22px,#4a3418 22px 24px),#3b2a14'
+};
+function mkZone(tier,name,price,count,prefix,pad,extras){
+  return {tier,name,price,extras:extras||{},res:Array.from({length:count},(_,i)=>({code:(tier==='vip'?'VIP':prefix)+'-'+(pad&&tier!=='vip'?String(i+1).padStart(2,'0'):i+1)}))};
+}
+const DEMO = [
+  {id:'d1',category:'pc_club',name:'Nexus Cyber Club',address:'Семей, Абай д-лы 92 (демо)',whatsapp:'+77010000001',instagram:'nexus.semey',twoGis:'https://2gis.kz/semey',is24h:true,payment:'kaspi',prepay:500,kaspi:'+7 701 000 00 01 · Нұрлан Б.',photos:[],
+   zones:[mkZone('standard','Standard',800,20,'PC',true,{gpu:'RTX 3060',hz:'144'}),mkZone('vip','VIP',1500,5,'PC',true,{gpu:'RTX 4070',hz:'240'})]},
+  {id:'d2',category:'playstation',name:'Pixel PS Lounge',address:'Семей, Шәкәрім д-лы 41 (демо)',whatsapp:'+77010000002',instagram:'pixel.ps',twoGis:'https://2gis.kz/semey',is24h:false,opens:'10:00',closes:'04:00',payment:'kaspi',prepay:1000,kaspi:'+7 701 000 00 02 · Айдос К.',photos:[],
+   zones:[mkZone('standard','Standard бөлмелер',1500,4,'PS',false,{console:'PS5',tv:'55"',cap:'4'}),mkZone('vip','VIP бөлмелер',3000,2,'PS',false,{console:'PS5',tv:'75"',cap:'8'})]},
+  {id:'d3',category:'football',name:'Ertis Arena',address:'Семей, Ертіс жағалауы (демо)',whatsapp:'+77010000003',instagram:'',twoGis:'https://2gis.kz/semey',is24h:false,opens:'08:00',closes:'00:00',payment:'venue',prepay:0,kaspi:'',photos:[],
+   zones:[mkZone('standard','Алаңдар',12000,2,'АЛАҢ',false,{size:'5×5',type:'Жабық, жасанды шөп',cap:'10–14'})]}
+];
+
+const S = {
+  mode:'client', clubs:[...DEMO], bookings:[],
+  // клиент
+  view:'list', filter:'all', clubId:null, tier:'standard', dayIdx:0, time:null, dur:2, seat:null,
+  accepted:false, name:'', phone:'', errors:{}, booking:null,
+  // кәсіпкер
+  step:0, done:false, approved:false, f:newForm()
+};
+function newForm(){return {category:null,name:'',address:'',whatsapp:'',twoGis:'',instagram:'',desc:'',photos:[],
+  std:{count:0,price:0,extras:{}}, hasVip:true, vip:{count:0,price:0,extras:{}},
+  is24h:false, opens:'10:00', closes:'02:00', payment:'kaspi', prepay:1000, kaspi:''};}
+
+/* ===================== Көмекшілер ===================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => Math.round(n).toLocaleString('ru-RU').replace(/ |,/g,' ') + ' ₸';
+function normPhone(p){let d=String(p||'').replace(/\D/g,'');if(d.length===11&&(d[0]==='7'||d[0]==='8'))d='7'+d.slice(1);if(d.length===10&&d[0]==='7')d='7'+d;return /^77\d{9}$/.test(d)?'+'+d:null;}
+const prettyPhone = p => p ? p.replace(/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/,'+7 $1 $2 $3 $4') : '';
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+const DAYS=['Жс','Дс','Сс','Ср','Бс','Жм','Сб'];
+const MONTHS=['қаң','ақп','нау','сәу','мам','мау','шіл','там','қыр','қаз','қар','жел'];
+function dayDate(i){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+i);return d;}
+const toMin = t => {const [h,m]=t.split(':').map(Number);return h*60+m;};
+const hhmm = m => {m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
+const club = () => S.clubs.find(c=>c.id===S.clubId);
+const zoneOf = c => c.zones.find(z=>z.tier===S.tier) || c.zones[0];
+function genCode(){const a='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';let s='OY-';for(let i=0;i<6;i++)s+=a[Math.floor(Math.random()*32)];return s;}
+
+/* Слоттар: 30 минут қадам, ұзақтық жұмыс уақытына толық сыюы керек (дерекқордағы fits_opening_hours сияқты) */
+function slotsFor(c, dayIdx, dur){
+  const out=[]; const now=new Date(); const base=dayDate(dayIdx);
+  let start=0, end=1440;
+  if(!c.is24h){start=toMin(c.opens); end=toMin(c.closes); if(end<=start) end+=1440;}
+  for(let m=start; m+dur*60<=(c.is24h?1440+start:end); m+=30){
+    const t=new Date(base.getTime()+m*60000);
+    out.push({m, label:hhmm(m), past:t<new Date(now.getTime()-5*60000)});
+  }
+  return c.is24h ? out.filter(s=>s.m<1440) : out;
+}
+function intervalOf(){const b=dayDate(S.dayIdx).getTime()+S.time*60000;return [b,b+S.dur*3600000];}
+function seatState(c, code){
+  if(S.seat===code) return 'sel';
+  if(S.time==null) return 'av';
+  const [a,b]=intervalOf();
+  if(S.bookings.some(x=>x.clubId===c.id&&x.code===code&&x.start<b&&a<x.end)) return 'occ';
+  if(hash(c.id+code)%100<4) return 'off';
+  const h=hash(c.id+code+S.dayIdx+'|'+Math.floor(S.time/60))%100;
+  return h<24?'occ':h<30?'held':'av';
+}
+const minPrice = c => Math.min(...c.zones.map(z=>z.price));
+
+/* ===================== Иконкалар ===================== */
+const IC = {
+  wa:'<svg viewBox="0 0 24 24"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19z" fill="none" stroke="#34D399" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9.5c.3 2 2 4 4.5 4.8l1-1.1 1.6.8c-.3 1-1 1.6-2 1.5C11 15.200 8.700 12.800 8.400 10.300c0-1 .5-1.700 1.400-2l.9 1.500z" fill="#34D399"/></svg>',
+  gis:'<svg viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z" fill="none" stroke="#22D3EE" stroke-width="1.8"/><circle cx="12" cy="10" r="2.2" fill="#22D3EE"/></svg>',
+  ig:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="#C4B5FD" stroke-width="1.8"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#C4B5FD" stroke-width="1.8"/><circle cx="16.8" cy="7.2" r="1" fill="#C4B5FD"/></svg>'
+};
+const nicheIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${NICHES[k].icon}</svg>`;
+function coverStyle(c){return c.photos&&c.photos[0]?`background-image:url('${c.photos[0]}')`:`background:${COVERS[c.category]}`;}
+
+/* ===================== Негізгі рендер ===================== */
+function render(){
+  const app=$('#app');
+  app.innerHTML = `
+  <header class="top">
+    <span class="logo">OYN<b>A</b></span>
+    <div class="seg" role="group" aria-label="Режим">
+      <button data-a="mode" data-v="client" aria-pressed="${S.mode==='client'}">Клиент</button>
+      <button data-a="mode" data-v="partner" aria-pressed="${S.mode==='partner'}">Кәсіпкер</button>
+    </div>
+  </header>
+  <p class="proto">Прототип: брондау мен тіркелу тек осы бетте жұмыс істейді, нақты базаға әлі қосылмаған. Логикасы дерекқордағы тестіленген функциялармен бірдей.</p>
+  ${S.mode==='client'?renderClient():renderPartner()}`;
+  tickTimer();
+}
+
+/* ---------- КЛИЕНТ ---------- */
+function renderClient(){
+  if(S.view==='club') return renderClub();
+  if(S.view==='checkout') return renderCheckout();
+  if(S.view==='status') return renderStatus();
+  const list=S.clubs.filter(c=>S.filter==='all'||c.category===S.filter);
+  return `<div class="stack">
+    <div><p class="muted small">Семей</p><h1>Бүгін қайда<br>ойнаймыз?</h1></div>
+    <div class="chips" role="group" aria-label="Санат">
+      ${[['all','Барлығы'],...Object.entries(NICHES).map(([k,v])=>[k,v.short])].map(([k,l])=>`<button class="chip" data-a="filter" data-v="${k}" aria-pressed="${S.filter===k}">${l}</button>`).join('')}
+    </div>
+    ${list.length?list.map(c=>`
+      <button class="club" data-a="open" data-v="${c.id}">
+        <div class="cover" style="${coverStyle(c)}"><span class="tag">${NICHES[c.category].short}</span></div>
+        <div class="stack" style="gap:6px">
+          <h3>${esc(c.name)}</h3>
+          <p class="muted small">${esc(c.address)}</p>
+          <p class="small num">${money(minPrice(c))} / сағ бастап · ${c.is24h?'24/7':esc(c.opens)+'–'+esc(c.closes)}</p>
+          <div class="row wrap">${c.payment==='kaspi'?`<span class="badge kaspi">Алдын ала ${money(c.prepay)}</span>`:`<span class="badge venue">Клубта төлейсіз</span>`}${c.isNew?'<span class="badge new">Жаңа серіктес</span>':''}</div>
+        </div>
+      </button>`).join(''):`<div class="card muted">Бұл санатта әзірге клуб жоқ. «Кәсіпкер» режимінде тіркеп көріңіз.</div>`}
+  </div>`;
+}
+
+function renderClub(){
+  const c=club(), n=NICHES[c.category], z=zoneOf(c);
+  const slots=slotsFor(c,S.dayIdx,S.dur);
+  const ex=n.extras.filter(e=>z.extras[e.k]).map(e=>`${e.l}: <b>${esc(z.extras[e.k])}</b>`).join(' · ');
+  const waLink = c.whatsapp?`https://wa.me/${c.whatsapp.replace('+','')}`:'';
+  const igLink = c.instagram?`https://instagram.com/${c.instagram.replace(/^@/,'')}`:'';
+  const total = S.seat? z.price*S.dur : 0;
+  return `<div class="stack">
+    <button class="link small" data-a="back" style="align-self:flex-start">← Барлық клубтар</button>
+    <div class="hero" style="${coverStyle(c)}">
+      <span class="badge" style="align-self:flex-start;background:#0008;margin-bottom:8px">${n.label}</span>
+      <h1>${esc(c.name)}</h1>
+      <p class="small" style="color:#cfd3ef;margin-top:4px">${esc(c.address)} · ${c.is24h?'тәулік бойы':esc(c.opens)+'–'+esc(c.closes)}</p>
+    </div>
+    ${c.photos&&c.photos.length>1?`<div class="photos">${c.photos.slice(1,5).map(p=>`<div class="ph" style="background-image:url('${p}')"></div>`).join('')}</div>`:''}
+    <div class="contacts">
+      <a href="${waLink||'#'}" target="_blank" rel="noopener" aria-disabled="${!waLink}">${IC.wa}WhatsApp</a>
+      <a href="${esc(c.twoGis)||'#'}" target="_blank" rel="noopener" aria-disabled="${!c.twoGis}">${IC.gis}2ГИС</a>
+      <a href="${igLink||'#'}" target="_blank" rel="noopener" aria-disabled="${!igLink}">${IC.ig}Instagram</a>
+    </div>
+
+    ${c.zones.length>1?`<div class="stack" style="gap:8px"><span class="label">Аймақ</span><div class="chips">${c.zones.map(zz=>`<button class="chip" data-a="tier" data-v="${zz.tier}" aria-pressed="${z.tier===zz.tier}">${esc(zz.name)} · ${money(zz.price)}/сағ</button>`).join('')}</div>${ex?`<p class="small muted">${ex}</p>`:''}</div>`:(ex?`<p class="small muted">${ex}</p>`:'')}
+
+    <div class="stack" style="gap:8px"><span class="label">Күн</span>
+      <div class="chips">${[0,1,2,3,4,5,6].map(i=>{const d=dayDate(i);return `<button class="chip" data-a="day" data-v="${i}" aria-pressed="${S.dayIdx===i}">${i===0?'Бүгін':i===1?'Ертең':DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}</button>`}).join('')}</div>
+    </div>
+    <div class="stack" style="gap:8px"><span class="label">Ұзақтығы</span>
+      <div class="chips">${[1,2,3,4].map(h=>`<button class="chip" data-a="dur" data-v="${h}" aria-pressed="${S.dur===h}">${h} сағат</button>`).join('')}</div>
+    </div>
+    <div class="stack" style="gap:8px"><span class="label">Басталу уақыты</span>
+      <div class="slots">${slots.length?slots.map(s=>`<button class="slot num" data-a="time" data-v="${s.m}" aria-pressed="${S.time===s.m}" ${s.past?'disabled':''}>${s.label}</button>`).join(''):'<p class="muted small">Бұл ұзақтыққа бос уақыт жоқ</p>'}</div>
+    </div>
+
+    <div class="stack" style="gap:8px"><span class="label">${n.unit[0].toUpperCase()+n.unit.slice(1)} таңдаңыз</span>
+      ${S.time==null?`<div class="card muted small">Алдымен уақытты таңдаңыз — сонда қай ${n.unit} бос екені көрінеді.</div>`:renderMap(c,z,n)}
+    </div>
+  </div>
+  <div class="bar">
+    <div class="sum"><span class="muted">${S.seat?`${esc(S.seat)} · ${hhmm(S.time)}–${hhmm(S.time+S.dur*60)}`:`Орын таңдалмады`}</span><b class="num">${S.seat?money(total):''}</b></div>
+    <button class="btn" data-a="toCheckout" ${S.seat?'':'disabled'}>Жалғастыру</button>
+  </div>`;
+}
+
+function renderMap(c,z,n){
+  const items=z.res.map(r=>({code:r.code,st:seatState(c,r.code)}));
+  const dis = st => st==='occ'||st==='held'||st==='off' ? 'disabled' : '';
+  const lbl = st => ({av:'бос',sel:'таңдалды',occ:'бос емес',held:'уақытша ұсталған',off:'жабық'})[st];
+  let body='';
+  if(n.layout==='grid'){
+    body=`<div class="screen"></div><div class="screen-t">КІРЕБЕРІС · РЕСЕПШН</div><div class="grid">${items.map(i=>`<button class="seat st-${i.st}" data-a="seat" data-v="${i.code}" ${dis(i.st)} aria-label="${i.code}, ${lbl(i.st)}">${i.code.split('-')[1]}</button>`).join('')}</div>`;
+  } else if(n.layout==='rooms'){
+    body=`<div class="rooms">${items.map(i=>`<button class="room st-${i.st}" data-a="seat" data-v="${i.code}" ${dis(i.st)} aria-label="${i.code}, ${lbl(i.st)}"><b>${i.code}</b><span class="small">${esc(z.extras.console||'PS5')}${z.extras.tv?' · '+esc(z.extras.tv):''}</span><span class="small">${z.extras.cap?esc(z.extras.cap)+' адамға дейін':''}</span><span class="small" style="margin-top:auto">${lbl(i.st)}</span></button>`).join('')}</div>`;
+  } else if(n.layout==='fields'){
+    body=`<div class="fields">${items.map(i=>`<button class="field st-${i.st}" data-a="seat" data-v="${i.code}" ${dis(i.st)} aria-label="${i.code}, ${lbl(i.st)}"><span><b>${i.code}</b><br><span class="small">${esc(z.extras.size||'')} ${z.extras.type?'· '+esc(z.extras.type):''}</span><br><span class="small">${lbl(i.st)}</span></span></button>`).join('')}</div>`;
+  } else {
+    body=`<div class="lanes">${items.map(i=>`<button class="lane st-${i.st}" data-a="seat" data-v="${i.code}" ${dis(i.st)} aria-label="${i.code}, ${lbl(i.st)}">${i.code.split('-')[1]}</button>`).join('')}</div>`;
+  }
+  return `<div class="map">${body}
+    <div class="legend"><span><i></i>Бос</span><span><i style="background:var(--cyan);border-color:var(--cyan)"></i>Таңдалды</span><span><i style="background:#1a1d2e;border-color:#1a1d2e"></i>Бос емес</span><span><i style="border-style:dashed;border-color:var(--warn)"></i>Төлем күтілуде</span><span><i style="opacity:.4"></i>Жабық</span></div></div>`;
+}
+
+function renderCheckout(){
+  const c=club(), z=zoneOf(c), total=z.price*S.dur, pre=c.payment==='kaspi'?Math.min(c.prepay,total):0;
+  const d=dayDate(S.dayIdx), e=S.errors;
+  const held = S.booking && S.booking.status==='held';
+  return `<div class="stack">
+    <button class="link small" data-a="backClub" style="align-self:flex-start">← Орынды өзгерту</button>
+    <h2>Брондауды растау</h2>
+    <div class="card"><dl class="sum">
+      <dt>Клуб</dt><dd>${esc(c.name)}</dd>
+      <dt>Орын</dt><dd>${esc(S.seat)} · ${esc(z.name)}</dd>
+      <dt>Күні</dt><dd>${d.getDate()} ${MONTHS[d.getMonth()]}, ${DAYS[d.getDay()]}</dd>
+      <dt>Уақыты</dt><dd class="num">${hhmm(S.time)}–${hhmm(S.time+S.dur*60)} (${S.dur} сағ)</dd>
+      <dt>Бағасы</dt><dd class="num">${money(z.price)} × ${S.dur}</dd>
+    </dl>
+    <div class="total"><span>Жалпы</span><b class="num">${money(total)}</b></div>
+    ${pre?`<p class="small muted" style="margin-top:6px">Қазір алдын ала: <b style="color:var(--text)">${money(pre)}</b>. Қалғаны ${money(total-pre)} клубта төленеді.</p>`:`<p class="small muted" style="margin-top:6px">Алдын ала төлем жоқ — барлығы клубта төленеді.</p>`}
+    </div>
+
+    ${pre&&!held?`<label class="rules" for="acc"><input type="checkbox" id="acc" data-a="accept" ${S.accepted?'checked':''}><span><b>Ережемен келісемін:</b> келмесем немесе ойын басталуына 2 сағаттан аз қалғанда болдырмасам, алдын ала төлем (${money(pre)}) қайтарылмайды.</span></label>
+      <button class="btn" data-a="hold" ${S.accepted?'':'disabled'}>Орынды 10 минутқа сақтау</button>`:''}
+
+    ${pre&&held?`<div class="kaspi">
+        <div class="row" style="justify-content:space-between"><span class="label" style="color:#fda4af">Kaspi аударымы</span><span class="timer num" id="timer">10:00</span></div>
+        <div class="amt num">${money(pre)}</div>
+        <p class="small">Клубтың Kaspi нөміріне аударыңыз:</p>
+        <div class="row" style="justify-content:space-between"><b class="num">${esc(c.kaspi)}</b><button class="chip" data-a="copy" data-v="${esc(c.kaspi.split('·')[0].trim())}" id="copyBtn">Көшіру</button></div>
+        <p class="small muted">Ақша тікелей клубқа түседі. OYNA төлемді ұстамайды.</p>
+      </div>`:''}
+
+    ${(!pre)||held?`<div class="stack">
+      <h3>${pre?'Аудардыңыз ба? Енді байланысыңызды жазыңыз':'Байланысыңызды жазыңыз'}</h3>
+      <div class="f ${e.name?'bad':''}"><label for="gname">Атыңыз</label><input id="gname" data-a="in" data-k="name" value="${esc(S.name)}" autocomplete="given-name" placeholder="Мысалы, Ерлан">${e.name?`<span class="err">${e.name}</span>`:''}</div>
+      <div class="f ${e.phone?'bad':''}"><label for="gphone">WhatsApp нөміріңіз</label><input id="gphone" data-a="in" data-k="phone" value="${esc(S.phone)}" inputmode="tel" autocomplete="tel" placeholder="+7 7__ ___ __ __">${e.phone?`<span class="err">${e.phone}</span>`:''}</div>
+      <p class="small muted">Клуб растауды және еске салуды осы нөмірге жібереді.</p>
+    </div>`:''}
+  </div>
+  ${(!pre)||held?`<div class="bar"><button class="btn ${pre?'cyan':''}" data-a="submit">${pre?'Аудардым':'Брондау'}</button></div>`:''}`;
+}
+
+function renderStatus(){
+  const b=S.booking, c=S.clubs.find(x=>x.id===b.clubId);
+  const ok=b.status==='confirmed';
+  const d=new Date(b.start);
+  return `<div class="stack">
+    <span class="pill ${ok?'ok':'wait'}">${ok?'Бронь расталды':'Клуб төлемді тексеріп жатыр'}</span>
+    <div><p class="muted small">Бронь коды</p><div class="code">${b.code}</div></div>
+    <div class="card"><dl class="sum">
+      <dt>Клуб</dt><dd>${esc(c.name)}</dd>
+      <dt>Орын</dt><dd>${esc(b.code2)}</dd>
+      <dt>Күні</dt><dd>${d.getDate()} ${MONTHS[d.getMonth()]}, ${DAYS[d.getDay()]}</dd>
+      <dt>Уақыты</dt><dd class="num">${hhmm(d.getHours()*60+d.getMinutes())}–${hhmm(d.getHours()*60+d.getMinutes()+b.dur*60)}</dd>
+      <dt>Атыңыз</dt><dd>${esc(b.name)}</dd>
+      <dt>WhatsApp</dt><dd class="num">${prettyPhone(b.phone)}</dd>
+      ${b.prepay?`<dt>Алдын ала</dt><dd class="num">${money(b.prepay)}</dd><dt>Клубта</dt><dd class="num">${money(b.total-b.prepay)}</dd>`:`<dt>Клубта</dt><dd class="num">${money(b.total)}</dd>`}
+    </dl></div>
+    ${ok?`<p class="small">Уақытында келіп, ресепшнде кодты айтыңыз. ${b.prepay?'Келмесеңіз, алдын ала төлем қайтарылмайды.':''}</p>`:`<p class="small muted">Әдетте бірнеше минут алады. Орын сіз үшін 30 минут сақталады.</p>
+      <button class="btn ghost" data-a="staffConfirm">Клуб қызметкері ретінде «Ақша түсті» басу (демо)</button>`}
+    <a class="btn ghost" style="text-align:center;text-decoration:none" href="https://wa.me/${c.whatsapp.replace('+','')}" target="_blank" rel="noopener">Клубқа WhatsApp-та жазу</a>
+    <button class="link" data-a="home">Басты бетке</button>
+  </div>`;
+}
+
+/* ---------- КӘСІПКЕР ---------- */
+const STEPS=['Ниша','Клуб туралы','Орындар мен бағалар','Уақыт және төлем','Тексеру'];
+function renderPartner(){
+  if(S.done) return renderPartnerDone();
+  const f=S.f;
+  return `<div class="stack">
+    <div><div class="steps">${STEPS.map((_,i)=>`<i class="${i<=S.step?'on':''}"></i>`).join('')}</div>
+      <p class="muted small">${S.step+1}/${STEPS.length} · ${STEPS[S.step]}</p></div>
+    ${[pStep0,pStep1,pStep2,pStep3,pStep4][S.step]()}
+  </div>
+  <div class="bar"><div class="row">
+    ${S.step>0?`<button class="btn ghost" data-a="pPrev" style="width:auto;padding:14px 18px">Артқа</button>`:''}
+    <button class="btn" data-a="pNext" ${S.step===0&&!f.category?'disabled':''}>${S.step===4?'Өтінімді жіберу':'Келесі'}</button>
+  </div></div>`;
+}
+function fld(id,label,k,opts={}){
+  const e=S.errors[k];
+  return `<div class="f ${e?'bad':''}"><label for="${id}">${label}${opts.req?' *':''}</label>
+    ${opts.area?`<textarea id="${id}" rows="3" data-a="pin" data-k="${k}" placeholder="${esc(opts.ph||'')}">${esc(S.f[k])}</textarea>`
+    :`<input id="${id}" data-a="pin" data-k="${k}" value="${esc(S.f[k])}" placeholder="${esc(opts.ph||'')}" ${opts.type?`inputmode="${opts.type}"`:''}>`}
+    ${e?`<span class="err">${e}</span>`:''}</div>`;
+}
+function pStep0(){
+  return `<h1>Клубыңызды<br>OYNA-ға қосыңыз</h1>
+  <p class="muted">Тегін. Ақша клиенттен тікелей сізге түседі.</p>
+  <span class="label">Сіздің нишаңыз</span>
+  <div class="niche">${Object.entries(NICHES).map(([k,n])=>`<button data-a="niche" data-v="${k}" aria-pressed="${S.f.category===k}">${nicheIcon(k)}<b>${n.label}</b></button>`).join('')}</div>`;
+}
+function pStep1(){
+  const f=S.f;
+  return `<h2>Клуб туралы</h2>
+  ${fld('pname','Клуб атауы','name',{req:1,ph:NICHES[f.category].label==='Компьютер клубы'?'Мысалы, Nexus Cyber':'Мысалы, Pixel Lounge'})}
+  ${fld('paddr','Мекенжай','address',{req:1,ph:'Семей, көше, үй'})}
+  ${fld('pwa','WhatsApp нөмірі','whatsapp',{req:1,ph:'+7 7__ ___ __ __',type:'tel'})}
+  ${fld('p2gis','2ГИС сілтемесі','twoGis',{ph:'https://2gis.kz/semey/firm/...'})}
+  ${fld('pig','Instagram','instagram',{ph:'@club.semey'})}
+  ${fld('pdesc','Қысқаша сипаттама','desc',{area:1,ph:'Не ерекше: жабдық, акциялар, тағамдар...'})}
+  <div class="stack" style="gap:8px"><span class="label">Фотолар (біріншісі — мұқаба)</span>
+    <div class="photos">${f.photos.map((p,i)=>`<div class="ph" style="background-image:url('${p}')">${i===0?'<em>МҰҚАБА</em>':''}</div>`).join('')}
+      ${f.photos.length<8?`<label for="pfile" aria-label="Фото қосу">+</label>`:''}</div>
+    <input type="file" id="pfile" accept="image/*" multiple hidden data-a="photos">
+  </div>`;
+}
+function zoneEditor(which){
+  const n=NICHES[S.f.category], z=S.f[which], isVip=which==='vip';
+  return `<div class="zone ${isVip?'vip':''}">
+    <div class="row" style="justify-content:space-between"><h3>${isVip?n.vip.name:n.std.name}</h3>${isVip?'<span class="badge" style="color:var(--violet-ink);border-color:#4c2f9b">VIP</span>':''}</div>
+    <div class="two">
+      <div class="f"><label>${n.countLabel}</label><div class="stepper"><button data-a="cnt" data-z="${which}" data-v="-1" aria-label="Азайту">−</button><output class="num">${z.count}</output><button data-a="cnt" data-z="${which}" data-v="1" aria-label="Көбейту">+</button></div></div>
+      <div class="f ${S.errors[which+'price']?'bad':''}"><label for="${which}price">1 сағат, ₸</label><input id="${which}price" class="num" inputmode="numeric" data-a="zin" data-z="${which}" data-k="price" value="${z.price||''}" placeholder="${n[isVip?'vip':'std'].price}"></div>
+    </div>
+    ${S.errors[which+'price']?`<span class="err small" style="color:var(--bad)">${S.errors[which+'price']}</span>`:''}
+    <div class="two">${n.extras.map(e=>`<div class="f"><label for="${which}${e.k}">${e.l}</label><input id="${which}${e.k}" data-a="zex" data-z="${which}" data-k="${e.k}" value="${esc(z.extras[e.k]||'')}" placeholder="${esc(e.ph)}"></div>`).join('')}</div>
+  </div>`;
+}
+function pStep2(){
+  const f=S.f, n=NICHES[f.category];
+  const pc = mkPreviewClub();
+  return `<h2>Орындар мен бағалар</h2>
+  <p class="muted small">Әр ${n.unit} клиентке жеке көрінеді, ол нақты ${n.unit}ды таңдап брондайды.</p>
+  ${zoneEditor('std')}
+  <label class="switch" for="vipsw"><span><b>VIP аймақ бар</b><br><span class="small muted">Бағасы бөлек ${n.unit}лар</span></span><input type="checkbox" id="vipsw" data-a="vipToggle" ${f.hasVip?'checked':''}></label>
+  ${f.hasVip?zoneEditor('vip'):''}
+  <div><span class="label">Клиент осылай көреді</span>
+    <div style="margin-top:8px">${previewMap(pc)}</div>
+    <p class="preview-note">Кодтар автоматты: ${pc.zones.map(z=>z.res.length?`${z.res[0].code}…${z.res[z.res.length-1].code}`:'').filter(Boolean).join(', ')}</p>
+  </div>`;
+}
+function previewMap(pc){
+  const keep={seat:S.seat,time:S.time,tier:S.tier};
+  S.seat=null;S.time=null;
+  const html=pc.zones.map(z=>{S.tier=z.tier;return `<p class="small muted" style="margin:6px 0">${esc(z.name)} · ${money(z.price)}/сағ</p>`+renderMap(pc,z,NICHES[pc.category]).replace(/data-a="seat"/g,'tabindex="-1"');}).join('');
+  Object.assign(S,keep);
+  return html;
+}
+function pStep3(){
+  const f=S.f;
+  return `<h2>Жұмыс уақыты және төлем</h2>
+  <label class="switch" for="h24"><span><b>Тәулік бойы (24/7)</b></span><input type="checkbox" id="h24" data-a="h24" ${f.is24h?'checked':''}></label>
+  ${f.is24h?'':`<div class="two"><div class="f"><label for="op">Ашылады</label><input id="op" type="time" step="1800" data-a="pin" data-k="opens" value="${f.opens}"></div><div class="f"><label for="cl">Жабылады</label><input id="cl" type="time" step="1800" data-a="pin" data-k="closes" value="${f.closes}"></div></div>
+  <p class="small muted">Түнде жабылса (мыс. 10:00–04:00), солай жаза беріңіз.</p>`}
+  <span class="label">Клиент қалай төлейді?</span>
+  <button class="radio" data-a="pay" data-v="kaspi" aria-pressed="${f.payment==='kaspi'}"><span class="dot"></span><span><b>Kaspi-ге алдын ала аудару</b><br><span class="small muted">Клиент аударады, сіз «Ақша түсті» деп растайсыз. Келмесе — ақша сізде қалады.</span></span></button>
+  <button class="radio" data-a="pay" data-v="venue" aria-pressed="${f.payment==='venue'}"><span class="dot"></span><span><b>Клубта төлейді</b><br><span class="small muted">Алдын ала төлемсіз. Клиент атын және нөмірін қалдырады.</span></span></button>
+  ${f.payment==='kaspi'?`<div class="two">
+    <div class="f ${S.errors.prepay?'bad':''}"><label for="pre">Алдын ала, ₸</label><input id="pre" class="num" inputmode="numeric" data-a="pin" data-k="prepay" value="${f.prepay||''}">${S.errors.prepay?`<span class="err">${S.errors.prepay}</span>`:''}</div>
+    <div class="f ${S.errors.kaspi?'bad':''}"><label for="ksp">Kaspi нөмірі және аты</label><input id="ksp" data-a="pin" data-k="kaspi" value="${esc(f.kaspi)}" placeholder="+7 7__ · Аты Т.">${S.errors.kaspi?`<span class="err">${S.errors.kaspi}</span>`:''}</div>
+  </div>
+  <div class="rules" style="border-color:#3b2a5c;background:#160f2e"><span>Клиент брондамас бұрын келіседі: <b>«Келмесеңіз немесе 2 сағаттан аз қалғанда болдырмасаңыз, алдын ала төлем қайтарылмайды».</b></span></div>`:''}`;
+}
+function pStep4(){
+  const f=S.f, n=NICHES[f.category];
+  const zones=[['std',n.std.name],...(f.hasVip?[['vip',n.vip.name]]:[])];
+  return `<h2>Тексеріп, жіберіңіз</h2>
+  <div class="hero" style="${f.photos[0]?`background-image:url('${f.photos[0]}')`:`background:${COVERS[f.category]}`};min-height:150px">
+    <span class="badge" style="align-self:flex-start;background:#0008;margin-bottom:6px">${n.label}</span><h2>${esc(f.name)}</h2><p class="small">${esc(f.address)}</p></div>
+  <div class="card"><dl class="sum">
+    <dt>WhatsApp</dt><dd class="num">${prettyPhone(normPhone(f.whatsapp))}</dd>
+    <dt>2ГИС</dt><dd>${f.twoGis?'бар':'—'}</dd>
+    <dt>Instagram</dt><dd>${esc(f.instagram)||'—'}</dd>
+    <dt>Фото</dt><dd>${f.photos.length}</dd>
+    ${zones.map(([k,l])=>`<dt>${esc(l)}</dt><dd class="num">${f[k].count} ${n.unit} × ${money(+f[k].price)}</dd>`).join('')}
+    <dt>Уақыты</dt><dd>${f.is24h?'24/7':f.opens+'–'+f.closes}</dd>
+    <dt>Төлем</dt><dd>${f.payment==='kaspi'?'Kaspi, алдын ала '+money(+f.prepay):'Клубта'}</dd>
+  </dl></div>
+  <p class="small muted">OYNA командасы тексеріп, клубыңызды қосады. Пилот кезінде тегін.</p>`;
+}
+function renderPartnerDone(){
+  return `<div class="stack">
+    <span class="pill ${S.approved?'ok':'wait'}">${S.approved?'Клубыңыз OYNA-да жарияланды':'Өтінім тексерілуде'}</span>
+    <h1>${S.approved?'Клиенттер енді<br>брондай алады':'Рахмет!<br>Өтінім жіберілді'}</h1>
+    <p class="muted">${S.approved?'«Клиент» режиміне өтіп, клубыңызды тізімнен көріңіз.':'OYNA командасы деректерді тексеріп, WhatsApp арқылы хабарласады. Бекітілгенше клуб клиенттерге көрінбейді.'}</p>
+    ${S.approved?`<button class="btn" data-a="seeMine">Клубымды клиент ретінде көру</button>`:`<button class="btn ghost" data-a="approve">OYNA әкімшісі ретінде бекіту (демо)</button>`}
+    <button class="link" data-a="newApp">Жаңа өтінім</button>
+  </div>`;
+}
+function mkPreviewClub(){
+  const f=S.f, n=NICHES[f.category];
+  const zones=[mkZone('standard',n.std.name,+f.std.price||n.std.price,f.std.count,n.prefix,n.pad,f.std.extras)];
+  if(f.hasVip) zones.push(mkZone('vip',n.vip.name,+f.vip.price||n.vip.price,f.vip.count,n.prefix,n.pad,f.vip.extras));
+  return {id:'new-'+Date.now(),category:f.category,name:f.name.trim(),address:f.address.trim(),whatsapp:normPhone(f.whatsapp),
+    instagram:f.instagram.trim(),twoGis:f.twoGis.trim(),is24h:f.is24h,opens:f.opens,closes:f.closes,
+    payment:f.payment,prepay:f.payment==='kaspi'?+f.prepay:0,kaspi:f.kaspi.trim(),photos:[...f.photos],zones,isNew:true};
+}
+
+/* ---------- Тексеру (дерекқордағы ережелермен бірдей) ---------- */
+function validateStep(){
+  const f=S.f, e={};
+  if(S.step===1){
+    if(f.name.trim().length<2) e.name='Атауын жазыңыз';
+    if(f.address.trim().length<5) e.address='Толық мекенжай жазыңыз';
+    if(!normPhone(f.whatsapp)) e.whatsapp='Нөмір +7 7XX XXX XX XX түрінде болсын';
+  }
+  if(S.step===2){
+    for(const k of ['std',...(f.hasVip?['vip']:[])]){
+      const p=+f[k].price; if(!(p>=1&&p<=1000000)) e[k+'price']='Бағаны жазыңыз';
+    }
+  }
+  if(S.step===3 && f.payment==='kaspi'){
+    if(!(+f.prepay>=100)) e.prepay='Кемі 100 ₸';
+    if(f.kaspi.trim().length<10) e.kaspi='Kaspi нөмірін жазыңыз';
+  }
+  S.errors=e; return !Object.keys(e).length;
+}
+
+/* ===================== Таймер (hold 10 мин) ===================== */
+let timerId=null;
+function tickTimer(){
+  clearInterval(timerId);
+  const el=$('#timer'); if(!el||!S.booking) return;
+  const upd=()=>{const left=Math.max(0,S.booking.holdUntil-Date.now());const s=Math.ceil(left/1000);
+    el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    if(left<=0){clearInterval(timerId);S.booking=null;S.view='club';S.seat=null;S.errors={};render();}};
+  upd(); timerId=setInterval(upd,1000);
+}
+
+/* ===================== Оқиғалар ===================== */
+document.addEventListener('click', async ev=>{
+  const t=ev.target.closest('[data-a]'); if(!t||t.disabled) return;
+  const a=t.dataset.a, v=t.dataset.v;
+  if(['in','pin','zin','zex','accept','photos','vipToggle','h24'].includes(a)) return;
+  switch(a){
+    case 'mode': S.mode=v; S.errors={}; break;
+    case 'filter': S.filter=v; break;
+    case 'open': S.clubId=v; S.view='club'; S.tier=club().zones[0].tier; S.dayIdx=0; S.time=null; S.seat=null; S.dur=club().category==='football'?1:2; S.booking=null; S.accepted=false; break;
+    case 'back': case 'home': S.view='list'; S.booking=null; S.seat=null; break;
+    case 'backClub': S.view='club'; S.booking=null; S.errors={}; break;
+    case 'tier': S.tier=v; S.seat=null; break;
+    case 'day': S.dayIdx=+v; S.time=null; S.seat=null; break;
+    case 'dur': S.dur=+v; S.time=null; S.seat=null; break;
+    case 'time': S.time=+v; S.seat=null; break;
+    case 'seat': S.seat=v; break;
+    case 'toCheckout': S.view='checkout'; S.errors={}; S.accepted=false; window.scrollTo(0,0); break;
+    case 'hold': {
+      const [a1,b1]=intervalOf();
+      S.booking={status:'held',holdUntil:Date.now()+10*60000,clubId:S.clubId,code2:S.seat,start:a1,end:b1}; break; }
+    case 'copy':
+      try{await navigator.clipboard.writeText(v); t.textContent='Көшірілді';}catch(e){t.textContent=v;}
+      return;
+    case 'submit': {
+      const c=club(), z=zoneOf(c), e={};
+      if(S.name.trim().length<2) e.name='Атыңызды жазыңыз';
+      if(!normPhone(S.phone)) e.phone='Нөмір +7 7XX XXX XX XX түрінде болсын';
+      S.errors=e; if(Object.keys(e).length) break;
+      const [a1,b1]=intervalOf(); const pre=c.payment==='kaspi'?Math.min(c.prepay,z.price*S.dur):0;
+      S.booking={code:genCode(),status:pre?'held':'confirmed',clubId:c.id,code2:S.seat,start:a1,end:b1,dur:S.dur,
+        name:S.name.trim(),phone:normPhone(S.phone),total:z.price*S.dur,prepay:pre};
+      S.bookings.push({clubId:c.id,code:S.seat,start:a1,end:b1});
+      S.view='status'; window.scrollTo(0,0); break; }
+    case 'staffConfirm': S.booking.status='confirmed'; break;
+    // кәсіпкер
+    case 'niche': {
+      const n=NICHES[v]; S.f.category=v;
+      S.f.std={count:n.std.count,price:n.std.price,extras:{}}; S.f.vip={count:n.vip.count,price:n.vip.price,extras:{}};
+      S.f.hasVip=v!=='bowling'&&v!=='football'; break; }
+    case 'cnt': { const z=S.f[t.dataset.z]; z.count=Math.max(1,Math.min(200,z.count+ +v)); break; }
+    case 'pay': S.f.payment=v; break;
+    case 'pPrev': S.step--; S.errors={}; window.scrollTo(0,0); break;
+    case 'pNext':
+      if(!validateStep()) break;
+      if(S.step<4){S.step++; window.scrollTo(0,0);} else {S.done=true; S.approved=false;}
+      break;
+    case 'approve': { const c=mkPreviewClub(); S.clubs.unshift(c); S.myClubId=c.id; S.approved=true; break; }
+    case 'seeMine': S.mode='client'; S.clubId=S.myClubId; S.view='club'; S.tier='standard'; S.time=null; S.seat=null; S.dayIdx=0; S.dur=2; window.scrollTo(0,0); break;
+    case 'newApp': S.f=newForm(); S.step=0; S.done=false; S.approved=false; break;
+    default: return;
+  }
+  render();
+});
+document.addEventListener('input', ev=>{
+  const t=ev.target, a=t.dataset.a; if(!a) return;
+  if(a==='in') S[t.dataset.k]=t.value;
+  if(a==='pin') S.f[t.dataset.k]=t.value;
+  if(a==='zin') S.f[t.dataset.z][t.dataset.k]=t.value.replace(/\D/g,'');
+  if(a==='zex') S.f[t.dataset.z].extras[t.dataset.k]=t.value;
+});
+document.addEventListener('change', ev=>{
+  const t=ev.target, a=t.dataset.a; if(!a) return;
+  if(a==='accept'){S.accepted=t.checked;render();}
+  if(a==='vipToggle'){S.f.hasVip=t.checked;render();}
+  if(a==='h24'){S.f.is24h=t.checked;render();}
+  if(a==='zin'&&S.step===2) render();
+  if(a==='photos'){for(const file of t.files){if(S.f.photos.length<8)S.f.photos.push(URL.createObjectURL(file));}render();}
+});
+render();
+</script>
+</body>
+</html>
