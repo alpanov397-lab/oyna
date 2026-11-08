@@ -280,7 +280,7 @@ const IC={
 const S = {
   mode: 'client', loading: true, clubs: [], avail: [], toast: '',
   view: 'list', filter: 'all', clubId: null, tier: null, dayIdx: 0, time: null, dur: 2, seat: null,
-  accepted: false, name: '', phone: '', errors: {}, hold: null, busy: false, booking: null,
+  accepted: false, pd: false, name: '', phone: '', errors: {}, hold: null, busy: false, booking: null,
   session: null, member: undefined, myVenues: [],
   auth: { email: '', password: '', mode: 'in', msg: '' },
   step: 0, f: newForm()
@@ -452,10 +452,12 @@ function renderCheckout(){
       <h3>${pre?'Аудардыңыз ба? Енді байланысыңызды жазыңыз':'Байланысыңызды жазыңыз'}</h3>
       <div class="f ${e.name?'bad':''}"><label for="gname">Атыңыз</label><input id="gname" data-a="in" data-k="name" value="${esc(S.name)}" autocomplete="given-name" placeholder="Мысалы, Ерлан">${e.name?`<span class="err">${e.name}</span>`:''}</div>
       <div class="f ${e.phone?'bad':''}"><label for="gphone">WhatsApp нөміріңіз</label><input id="gphone" data-a="in" data-k="phone" value="${esc(S.phone)}" inputmode="tel" autocomplete="tel" placeholder="+7 7__ ___ __ __">${e.phone?`<span class="err">${e.phone}</span>`:''}</div>
-      <p class="small muted">Клуб растауды осы нөмірге жібереді.</p></div>`:''}
+      <p class="small muted">Клуб растауды осы нөмірге жібереді.</p>
+      <label class="rules" for="pd"><input type="checkbox" id="pd" data-a="pd" ${S.pd?'checked':''}><span>Атым мен нөмірімді осы броньды өңдеу үшін клубқа беруге келісемін.</span></label>${e.pd?`<span class="err">${e.pd}</span>`:''}${PRIVACY}</div>`:''}
   </div>
   ${(!pre)||held?`<div class="bar"><button class="btn ${pre?'cyan':''}" data-a="submit" ${S.busy?'disabled':''}>${S.busy?'Жіберілуде…':pre?'Аудардым':'Брондау'}</button></div>`:''}`;
 }
+const PRIVACY=`<details class="small muted" style="margin-top:4px"><summary style="cursor:pointer">Деректер қалай қолданылады?</summary><p style="margin-top:6px">Атыңыз бен WhatsApp нөміріңізді тек сіз брондаған клуб көреді — броньды растау және сізбен байланысу үшін. Нөміріңіз басқа адамдарға берілмейді, жарнамаға қолданылмайды. Деректер брондау тарихы ретінде сақталады; өшіруді қаласаңыз, клубқа немесе OYNA-ға WhatsApp арқылы жазыңыз (ҚР «Дербес деректер және оларды қорғау туралы» Заңы).</p></details>`;
 function renderStatus(){
   const b=S.booking;
   if(!b) return `<div class="card muted">Жүктелуде…</div>`;
@@ -495,6 +497,7 @@ function renderAuth(){
     <div class="f"><label for="aemail">Email</label><input id="aemail" type="email" data-a="auth" data-k="email" value="${esc(a.email)}" autocomplete="email"></div>
     <div class="f"><label for="apass">Құпия сөз (кемі 8 таңба)</label><input id="apass" type="password" data-a="auth" data-k="password" value="${esc(a.password)}" autocomplete="${a.mode==='up'?'new-password':'current-password'}"></div>
     ${a.msg?`<div class="${a.ok?'okbox':'errbox'}">${esc(a.msg)}</div>`:''}
+    ${a.mode==='up'?`<p class="small muted">Тіркелу арқылы клиенттердің аты мен нөмірін тек брондарды өңдеу үшін қолданып, бөтен адамдарға бермеуге келісесіз.</p>`:''}
     <button class="btn" data-a="authGo" ${S.busy?'disabled':''}>${a.mode==='up'?'Тіркелу':'Кіру'}</button>
   </div>`;
 }
@@ -628,7 +631,7 @@ function route(){
 document.addEventListener('click', async ev=>{
   const t=ev.target.closest('[data-a]'); if(!t||t.disabled) return;
   const a=t.dataset.a, v=t.dataset.v;
-  if(['in','pin','zin','zex','accept','photos','vipToggle','h24','auth'].includes(a)) return;
+  if(['in','pin','zin','zex','accept','pd','photos','vipToggle','h24','auth'].includes(a)) return;
   switch(a){
     case 'mode': S.mode=v; S.errors={}; if(v==='partner'&&S.session) loadPartner(); break;
     case 'filter': S.filter=v; break;
@@ -652,6 +655,7 @@ document.addEventListener('click', async ev=>{
       const c=club(), z=zoneOf(c), e={};
       if(S.name.trim().length<2) e.name='Атыңызды жазыңыз';
       if(!normPhone(S.phone)) e.phone='Нөмір +7 7XX XXX XX XX түрінде болсын';
+      if(!S.pd) e.pd='Келісім белгісін қойыңыз';
       S.errors=e; if(Object.keys(e).length) break;
       S.busy=true; render();
       try{
@@ -696,6 +700,7 @@ document.addEventListener('input', ev=>{
 document.addEventListener('change', ev=>{
   const t=ev.target,a=t.dataset.a; if(!a) return;
   if(a==='accept'){S.accepted=t.checked;render();}
+  if(a==='pd'){S.pd=t.checked;if(S.errors.pd){delete S.errors.pd;render();}}
   if(a==='vipToggle'){S.f.hasVip=t.checked;render();}
   if(a==='h24'){S.f.is24h=t.checked;render();}
   if(a==='photos'){for(const file of t.files){if(S.f.files.length>=6)break;if(file.size>5*1024*1024){toast('Фото 5 МБ-тан аспасын');continue;}S.f.files.push(file);S.f.photos.push(URL.createObjectURL(file));}render();}
