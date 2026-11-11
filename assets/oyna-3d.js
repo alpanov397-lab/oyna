@@ -160,6 +160,10 @@
     var t = clock.getElapsedTime();
     mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
     var cat = currentCat();
+    var focus = true;
+    try { focus = (typeof S === 'undefined') || (S.mode === 'client' && S.view === 'list') || (S.mode === 'partner' && !S.session); } catch (e) {}
+    var op = focus ? '1' : '0.28';
+    if (canvas.style.opacity !== op) canvas.style.opacity = op;
     var active = objs[cat] ? cat : order[Math.floor(t / 5) % order.length];
     var sy = Math.min(scrollY / 900, 1);
     order.forEach(function (k) {

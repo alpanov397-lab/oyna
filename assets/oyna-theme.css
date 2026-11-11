@@ -7,7 +7,7 @@
   --violet:#8B5CF6; --cyan:#22D3EE; --pink:#F43F9E; --lime:#A3E635;
 }
 html,body{background:radial-gradient(120% 70% at 80% 0%,#2a1060 0%,#070418 60%) fixed !important}
-#oyna3d{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;display:block}
+#oyna3d{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;display:block;transition:opacity .6s ease}
 .app{z-index:1;background:transparent}
 .top{background:rgba(7,4,24,.55) !important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .logo{letter-spacing:.06em}
