@@ -167,7 +167,9 @@
   swap('football', 'ball.glb', 2.6, { keep: fb.children.filter(function (c) { return c !== fb.userData.ball; }) });
   swap('playstation', 'pad.glb', 3.6, { rot: [0.25, 0, 0] });
   var pcLoaded = false;
-  function loadPC() { if (pcLoaded) return; pcLoaded = true; swap('pc_club', 'pc.glb', 3.8); }
+  /* PC модельі ауыр (1.7 МБ): телефонда жеңіл қарапайым нұсқа қалады */
+  var heavyOk = innerWidth >= 900 && !(navigator.connection && navigator.connection.saveData);
+  function loadPC() { if (pcLoaded || !heavyOk) return; pcLoaded = true; swap('pc_club', 'pc.glb', 3.8); }
   setTimeout(loadPC, 2500);
 
   /* неон тор + бөлшектер */
