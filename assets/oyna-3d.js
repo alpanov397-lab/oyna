@@ -119,6 +119,57 @@
   var order = ['pc_club', 'playstation', 'football'];
   Object.keys(objs).forEach(function (k) { objs[k].scale.setScalar(0.001); objs[k].userData.s = 0; scene.add(objs[k]); });
 
+  /* ---------- Шынайы 3D модельдер (Sketchfab, CC-BY) ---------- */
+  scene.add(new THREE.HemisphereLight(0xc4b5fd, 0x1b1240, 0.9));
+  var base = (document.currentScript && document.currentScript.src) ? document.currentScript.src.replace(/[^\/]*$/, '') : 'assets/';
+  function fit(model, size) {
+    var box = new THREE.Box3().setFromObject(model), dim = new THREE.Vector3(), c = new THREE.Vector3();
+    box.getSize(dim); box.getCenter(c);
+    var k = size / Math.max(dim.x, dim.y, dim.z || 1);
+    model.scale.multiplyScalar(k);
+    model.position.sub(c.multiplyScalar(k));
+    var w = new THREE.Group(); w.add(model); return w;
+  }
+  function tune(model) {
+    model.traverse(function (o) {
+      if (o.isMesh && o.material) {
+        (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) {
+          if ('metalness' in m) m.metalness = Math.min(m.metalness, 0.35);
+          if ('roughness' in m) m.roughness = Math.max(m.roughness, 0.35);
+        });
+      }
+    });
+  }
+  function swap(key, file, size, opts) {
+    if (!THREE.GLTFLoader) return;
+    new THREE.GLTFLoader().load(base + 'models/' + file, function (gltf) {
+      var g = objs[key], m = gltf.scene; tune(m);
+      if (opts && opts.recolor) {
+        var neonMats = [0x22d3ee, 0xf43f9e, 0xa3e635, 0x8b5cf6], ni = 0;
+        m.traverse(function (o) {
+          if (!o.isMesh) return;
+          var mat = Array.isArray(o.material) ? o.material[0] : o.material;
+          var hasLogo = mat && mat.map;
+          o.material = hasLogo
+            ? new THREE.MeshStandardMaterial({ color: opts.recolor, metalness: 0.45, roughness: 0.3, emissive: 0x2b0f6b, emissiveIntensity: 0.3 })
+            : new THREE.MeshStandardMaterial({ color: neonMats[ni % 4], emissive: neonMats[ni++ % 4], emissiveIntensity: 0.9, roughness: 0.4 });
+        });
+      }
+      var w = fit(m, size);
+      if (opts && opts.rot) w.rotation.set(opts.rot[0], opts.rot[1], opts.rot[2]);
+      (opts && opts.keep ? g.children.filter(function (c) { return opts.keep.indexOf(c) < 0; }) : g.children.slice()).forEach(function (c) { g.remove(c); });
+      g.add(w);
+      if (key === 'football') g.userData.ball = w;
+      if (key === 'playstation') g.userData.bar = null;
+    }, undefined, function () { /* жүктелмесе қарапайым пішін қала береді */ });
+  }
+  var fb = objs.football;
+  swap('football', 'ball.glb', 2.6, { keep: fb.children.filter(function (c) { return c !== fb.userData.ball; }) });
+  swap('playstation', 'pad.glb', 3.6, { rot: [0.25, 0, 0] });
+  var pcLoaded = false;
+  function loadPC() { if (pcLoaded) return; pcLoaded = true; swap('pc_club', 'pc.glb', 3.8); }
+  setTimeout(loadPC, 2500);
+
   /* неон тор + бөлшектер */
   var grid = new THREE.GridHelper(60, 60, 0x22d3ee, 0x5b21b6);
   grid.position.y = -2.6; grid.material.transparent = true; grid.material.opacity = 0.28; scene.add(grid);
@@ -175,8 +226,9 @@
       o.rotation.x = 0.15 + Math.sin(t * 0.7) * 0.06 + my * 0.3;
       o.position.y += Math.sin(t * 1.3) * 0.002;
     });
-    var ball = objs.football.userData.ball; ball.rotation.x = t * 0.9; ball.rotation.z = t * 0.4;
-    objs.playstation.userData.bar.material.emissiveIntensity = 1.2 + Math.sin(t * 3) * 0.6;
+    var ball = objs.football.userData.ball; if (ball) { ball.rotation.x = t * 0.9; ball.rotation.z = t * 0.4; }
+    var bar = objs.playstation.userData.bar; if (bar) bar.material.emissiveIntensity = 1.2 + Math.sin(t * 3) * 0.6;
+    if (cat === 'pc_club') loadPC();
     grid.position.z = (t * 0.6) % 1;
     stars.rotation.y = t * 0.012;
     camera.position.x = mx * 0.8; camera.position.y = 0.6 - my * 0.5 - sy * 0.6;
