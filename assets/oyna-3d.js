@@ -12,6 +12,10 @@
   try { renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true }); }
   catch (e) { canvas.remove(); return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  /* tone mapping: GLB модельдер күңгірт әрі «лай» болып көрінбеуі үшін */
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   var scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x070418, 0.05);
