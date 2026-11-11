@@ -1,0 +1,26 @@
+/* OYNA theme v2 — 3D фон + қазақ әріптерін қолдайтын шрифт. Ескі стильдердің үстінен жүктеледі. */
+@font-face{font-family:"Adineue KZ";font-weight:800;font-display:swap;src:url(fonts/adineue-kz-black.woff) format("woff")}
+@font-face{font-family:"Adineue KZ";font-weight:600;font-display:swap;src:url(fonts/adineue-kz-bold.woff) format("woff")}
+:root{
+  --display:"Adineue KZ","Golos Text","Arial Black",system-ui,sans-serif;
+  --bg:#070418; --surface:rgba(20,14,48,.62); --surface2:rgba(32,22,72,.7); --line:rgba(164,140,255,.22);
+  --violet:#8B5CF6; --cyan:#22D3EE; --pink:#F43F9E; --lime:#A3E635;
+}
+html,body{background:radial-gradient(120% 70% at 80% 0%,#2a1060 0%,#070418 60%) fixed !important}
+#oyna3d{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;display:block}
+.app{z-index:1;background:transparent}
+.top{background:rgba(7,4,24,.55) !important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{letter-spacing:.06em}
+.logo b{color:var(--cyan);text-shadow:0 0 16px rgba(34,211,238,.8)}
+.card,.club,.niche button,.chip,.seg,.room,.f input,.f textarea,.f select{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.club{transition:transform .25s,border-color .25s,box-shadow .25s}
+.club:hover{transform:translateY(-3px);border-color:rgba(34,211,238,.55);box-shadow:0 10px 30px -12px rgba(34,211,238,.45)}
+.btn{background:linear-gradient(135deg,#8B5CF6,#F43F9E);box-shadow:0 8px 26px -8px rgba(244,63,158,.6);transition:transform .2s,box-shadow .2s}
+.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(244,63,158,.8)}
+.btn.cyan{background:linear-gradient(135deg,#22D3EE,#A3E635);color:#04121a;box-shadow:0 8px 26px -8px rgba(34,211,238,.6)}
+.btn.ghost{background:rgba(255,255,255,.04);box-shadow:none}
+.chip[aria-pressed="true"]{background:rgba(34,211,238,.14);box-shadow:0 0 18px -4px rgba(34,211,238,.6)}
+.seg button[aria-pressed="true"]{background:linear-gradient(135deg,#8B5CF6,#F43F9E)}
+.bar{background:linear-gradient(to top,rgba(7,4,24,.95) 65%,transparent) !important}
+h1{font-size:30px}
+@media (prefers-reduced-motion:reduce){#oyna3d{display:none}}
